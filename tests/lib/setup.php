@@ -24,6 +24,8 @@ class Test_OC_Setup extends \Test\TestCase {
 	protected $logger;
 	/** @var \OCP\Security\ISecureRandom | PHPUnit_Framework_MockObject_MockObject */
 	protected $random;
+	/** @var \OCP\IURLGenerator | PHPUnit_Framework_MockObject_MockObject */
+	protected $urlGenerator;
 
 	protected function setUp() {
 		parent::setUp();
@@ -34,9 +36,10 @@ class Test_OC_Setup extends \Test\TestCase {
 		$this->defaults = $this->getMock('\OC_Defaults');
 		$this->logger = $this->getMock('\OCP\ILogger');
 		$this->random = $this->getMock('\OCP\Security\ISecureRandom');
+		$this->urlGenerator = $this->getMock('\OCP\IURLGenerator');
 		$this->setupClass = $this->getMock('\OC\Setup',
 			['class_exists', 'is_callable', 'getAvailableDbDriversForPdo'],
-			[$this->config, $this->iniWrapper, $this->l10n, $this->defaults, $this->logger, $this->random]);
+			[$this->config, $this->iniWrapper, $this->l10n, $this->defaults, $this->logger, $this->random, $this->urlGenerator]);
 	}
 
 	public function testGetSupportedDatabasesWithOneWorking() {
