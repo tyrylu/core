@@ -8,13 +8,15 @@
 
 	// load custom JS
 	foreach ($_['backends'] as $backend) {
-		if ($backend->getCustomJs()) {
-			script('files_external', $backend->getCustomJs());
+		$scripts = $backend->getCustomJs();
+		foreach ($scripts as $script) {
+			script('files_external', $script);
 		}
 	}
 	foreach ($_['authMechanisms'] as $authMechanism) {
-		if ($authMechanism->getCustomJs()) {
-			script('files_external', $authMechanism->getCustomJs());
+		$scripts = $authMechanism->getCustomJs();
+		foreach ($scripts as $script) {
+			script('files_external', $script);
 		}
 	}
 
