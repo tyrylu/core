@@ -93,7 +93,6 @@ class EntityTypeCollection extends RootCollection {
 			$name,
 			$this->name,
 			$this->commentsManager,
-			$this->fileRoot,
 			$this->userManager,
 			$this->userSession,
 			$this->logger
@@ -120,6 +119,5 @@ class EntityTypeCollection extends RootCollection {
 		$nodes = $this->fileRoot->getById(intval($name));
 		return !empty($nodes);
 	}
-
 
 }

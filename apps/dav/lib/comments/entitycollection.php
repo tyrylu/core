@@ -40,9 +40,6 @@ use Sabre\DAV\PropPatch;
 class EntityCollection extends RootCollection implements \Sabre\DAV\IProperties {
 	const PROPERTY_NAME_READ_MARKER  = '{http://owncloud.org/ns}readMarker';
 
-	/** @var  Folder */
-	protected $fileRoot;
-
 	/** @var  string */
 	protected $id;
 
@@ -53,7 +50,6 @@ class EntityCollection extends RootCollection implements \Sabre\DAV\IProperties 
 	 * @param string $id
 	 * @param string $name
 	 * @param ICommentsManager $commentsManager
-	 * @param Folder $fileRoot
 	 * @param IUserManager $userManager
 	 * @param IUserSession $userSession
 	 * @param ILogger $logger
@@ -62,7 +58,6 @@ class EntityCollection extends RootCollection implements \Sabre\DAV\IProperties 
 		$id,
 		$name,
 		ICommentsManager $commentsManager,
-		Folder $fileRoot,
 		IUserManager $userManager,
 		IUserSession $userSession,
 		ILogger $logger
@@ -76,7 +71,6 @@ class EntityCollection extends RootCollection implements \Sabre\DAV\IProperties 
 		$this->id = $id;
 		$this->name = $name;
 		$this->commentsManager = $commentsManager;
-		$this->fileRoot = $fileRoot;
 		$this->logger = $logger;
 		$this->userManager = $userManager;
 		$this->userSession = $userSession;
