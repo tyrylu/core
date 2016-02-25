@@ -24,7 +24,7 @@ namespace OCP\Comments;
 use Symfony\Component\EventDispatcher\Event;
 
 /**
- * Class CommentsEvent
+ * Class CommentsEntityEvent
  *
  * @package OCP\Comments
  * @since 9.0.0
@@ -51,7 +51,10 @@ class CommentsEntityEvent extends Event {
 
 	/**
 	 * @param string $name
-	 * @param \Closure $entityExistsFunction
+	 * @param \Closure $entityExistsFunction The closure should take one
+	 *                 argument, which is the id of the entity, that comments
+	 *                 should be handled for. The return should then be bool,
+	 *                 depending on whether comments are allowed (true) or not.
 	 * @throws \OutOfBoundsException when the entity name is already taken
 	 * @since 9.0.0
 	 */

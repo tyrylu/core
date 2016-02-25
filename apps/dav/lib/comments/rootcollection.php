@@ -92,7 +92,7 @@ class RootCollection implements ICollection {
 			throw new NotAuthenticated();
 		}
 
-		$event = new CommentsEntityEvent(CommentsEntityEvent::EVENT_ENTITY, []);
+		$event = new CommentsEntityEvent(CommentsEntityEvent::EVENT_ENTITY);
 		$this->dispatcher->dispatch(CommentsEntityEvent::EVENT_ENTITY, $event);
 
 		$this->entityTypeCollections = [];
