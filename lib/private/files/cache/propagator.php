@@ -22,6 +22,7 @@
 namespace OC\Files\Cache;
 
 use OCP\Files\Cache\IPropagator;
+use OCP\IDBConnection;
 
 /**
  * Propagate etags and mtimes within the storage
@@ -33,10 +34,17 @@ class Propagator implements IPropagator {
 	protected $storage;
 
 	/**
-	 * @param \OC\Files\Storage\Storage $storage
+	 * @var IDBConnection
 	 */
-	public function __construct(\OC\Files\Storage\Storage $storage) {
+	private $connection;
+
+	/**
+	 * @param \OC\Files\Storage\Storage $storage
+	 * @param IDBConnection $connection
+	 */
+	public function __construct(\OC\Files\Storage\Storage $storage, IDBConnection $connection) {
 		$this->storage = $storage;
+		$this->connection = $connection;
 	}
 
 
@@ -44,31 +52,51 @@ class Propagator implements IPropagator {
 	 * @param string $internalPath
 	 * @param int $time
 	 * @param int $sizeDifference number of bytes the file has grown
-	 * @return array[] all propagated entries
 	 */
 	public function propagateChange($internalPath, $time, $sizeDifference = 0) {
-		$cache = $this->storage->getCache($internalPath);
+		$storageId = (int)$this->storage->getStorageCache()->getNumericId();
 
-		$parentId = $cache->getParentId($internalPath);
-		$propagatedEntries = [];
-		while ($parentId !== -1) {
-			$entry = $cache->get($parentId);
-			$propagatedEntries[] = $entry;
-			if (!$entry) {
-				return $propagatedEntries;
-			}
-			$mtime = max($time, $entry['mtime']);
+		$parents = $this->getParents($internalPath);
 
-			if ($entry['size'] === -1) {
-				$newSize = -1;
-			} else {
-				$newSize = $entry['size'] + $sizeDifference;
-			}
-			$cache->update($parentId, ['mtime' => $mtime, 'etag' => $this->storage->getETag($entry['path']), 'size' => $newSize]);
+		$parentHashes = array_map('md5', $parents);
+		$etag = uniqid();
 
-			$parentId = $entry['parent'];
+		$builder = $this->connection->getQueryBuilder();
+		$hashParams = array_map(function ($hash) use ($builder) {
+			return $builder->expr()->literal($hash);
+		}, $parentHashes);
+
+		$builder->update('filecache')
+			->set('mtime', $builder->createFunction('GREATEST(`mtime`, :mtime)'))
+			->set('etag', $builder->createNamedParameter($etag, \PDO::PARAM_STR))
+			->where($builder->expr()->eq('storage', $builder->createNamedParameter($storageId, \PDO::PARAM_INT)))
+			->andWhere($builder->expr()->in('path_hash', $hashParams));
+
+		$builder->setParameter(':mtime', $time);
+
+		$builder->execute();
+
+		// we need to do size separably so we can ignore entries with uncalculated size
+		$builder = $this->connection->getQueryBuilder();
+		$builder->update('filecache')
+			->set('size', $builder->createFunction('`size` + :size'))
+			->where($builder->expr()->eq('storage', $builder->createNamedParameter($storageId, \PDO::PARAM_INT)))
+			->andWhere($builder->expr()->in('path_hash', $hashParams))
+			->andWhere($builder->expr()->gt('size', $builder->expr()->literal(-1, \PDO::PARAM_INT)));
+
+		$builder->setParameter(':size', $sizeDifference);
+
+		$builder->execute();
+	}
+
+	protected function getParents($path) {
+		$parts = explode('/', $path);
+		$parent = '';
+		$parents = [];
+		foreach ($parts as $part) {
+			$parents[] = $parent;
+			$parent = trim($parent . '/' . $part, '/');
 		}
-
-		return $propagatedEntries;
+		return $parents;
 	}
 }

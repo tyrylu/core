@@ -583,7 +583,7 @@ class Shared extends \OC\Files\Storage\Common implements ISharedStorage {
 		if (!$storage) {
 			$storage = $this;
 		}
-		return new \OCA\Files_Sharing\SharedPropagator($storage);
+		return new \OCA\Files_Sharing\SharedPropagator($storage, \OC::$server->getDatabaseConnection());
 	}
 
 	public function getOwner($path) {

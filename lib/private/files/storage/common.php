@@ -352,7 +352,7 @@ abstract class Common implements Storage, ILockingStorage {
 			$storage = $this;
 		}
 		if (!isset($this->propagator)) {
-			$this->propagator = new Propagator($storage);
+			$this->propagator = new Propagator($storage, \OC::$server->getDatabaseConnection());
 		}
 		return $this->propagator;
 	}
