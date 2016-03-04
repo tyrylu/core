@@ -366,6 +366,25 @@ class RepairMimeTypes extends \Test\TestCase {
 
 		$this->renameMimeTypes($currentMimeTypes, $fixedMimeTypes);
 	}
+	
+	/**
+	 * Test renaming the bzip2 mime types
+	 */
+	public function testRenameBzip2MimeTypes() {
+		$currentMimeTypes = [
+			['bz2', 'application/octet-stream'],
+			['tar.bz2', 'application/octet-stream'],
+			['tbz2', 'application/octet-stream'],
+		];
+
+		$fixedMimeTypes = [
+			['bz2', 'application/x-bzip2'],
+			['tar.bz2', 'application/x-bzip2'],
+			['tbz2', 'application/x-bzip2'],
+		];
+
+		$this->renameMimeTypes($currentMimeTypes, $fixedMimeTypes);
+	}
 
 	/**
 	 * Test renaming and splitting old office mime types when

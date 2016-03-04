@@ -304,6 +304,16 @@ class RepairMimeTypes extends BasicEmitter implements \OC\RepairStep {
 
 		self::updateMimetypes($updatedMimetypes);
 	}
+	
+	private function introduceBzip2MimeType(){
+		$updatedMimetypes = [
+			'bz2' => 'application/x-bzip2',
+			'tar.bz2' => 'application/x-bzip2',
+			'tbz2' => 'application/x-bzip2',
+		];
+		
+		self::updateMimetypes($updatedMimetypes);
+	}
 
 	/**
 	 * Fix mime types
@@ -372,6 +382,12 @@ class RepairMimeTypes extends BasicEmitter implements \OC\RepairStep {
 		if (version_compare($ocVersionFromBeforeUpdate, '9.0.0.10', '<')) {
 			if ($this->introduceRichDocumentsMimeTypes()) {
 				$this->emit('\OC\Repair', 'info', array('Fixed richdocuments additional office mime types'));
+			}
+		}
+		
+		if (version_compare($ocVersionFromBeforeUpdate, '9.1.0.1', '<')) {
+			if ($this->introduceBzip2MimeType()) {
+				$this->emit('\OC\Repair', 'info', array('Fixed bzip2 mime types'));
 			}
 		}
 	}
