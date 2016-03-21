@@ -243,15 +243,7 @@ class OC_Response {
 		 * is used everywhere.
 		 * @see \OCP\AppFramework\Http\Response::getHeaders
 		 */
-		$policy = 'default-src \'self\'; '
-			. 'script-src \'self\' \'unsafe-eval\'; '
-			. 'style-src \'self\' \'unsafe-inline\'; '
-			. 'frame-src *; '
-			. 'img-src * data: blob:; '
-			. 'font-src \'self\' data:; '
-			. 'media-src *; ' 
-			. 'connect-src *';
-		header('Content-Security-Policy:' . $policy);
+
 
 		// Send fallback headers for installations that don't have the possibility to send
 		// custom headers on the webserver side
