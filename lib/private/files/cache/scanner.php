@@ -113,7 +113,12 @@ class Scanner extends BasicEmitter {
 	public function getData($path) {
 		$data = $this->storage->getMetaData($path);
 		if (is_null($data)) {
-			\OCP\Util::writeLog('OC\Files\Cache\Scanner', "!!! Path '$path' is not accessible or present !!!", \OCP\Util::DEBUG);
+			\OCP\Util::writeLog('OC\Files\Cache\Scanner', "!!! Path '$path' - '$this->storageId' is not accessible or present !!!", \OCP\Util::ERROR);
+			if ($this->storage->instanceOfStorage('\OCP\Files\IHomeStorage') && ($path === '' || $path === 'files')) {
+				\OCP\Util::writeLog('OC\Files\Cache\Scanner', 'Missing important folder "' . $path . '" in home storage!!! - ' . $this->storageId, \OCP\Util::ERROR);
+				throw new \OCP\Files\StorageNotAvailableException('Missing important folder "' . $path . '" in home storage - ' . $this->storageId);
+			}
+			\OC::$server->getLogger()->logException(new \Exception("Path '$path' - '$this->storageId' is not accessible or present"), ['app' => 'OC\Files\Cache\Scanner']);
 		}
 		return $data;
 	}

@@ -402,6 +402,11 @@ class Cache {
 	 */
 	public function remove($file) {
 		$entry = $this->get($file);
+		if(!is_null($entry)) {
+			\OC::$server->getLogger()->logException(new \Exception('### DEBUG Cache::remove() path="' . $file . '" fileid=' . $entry['fileid'] . ' parent=' . $entry['parent'] . ' storage=' . $this->getNumericStorageId()));
+		} else {
+			\OC::$server->getLogger()->logException(new \Exception('### DEBUG Cache::remove() path="' . $file . '" storage=' . $this->getNumericStorageId()));
+		}
 		$sql = 'DELETE FROM `*PREFIX*filecache` WHERE `fileid` = ?';
 		\OC_DB::executeAudited($sql, array($entry['fileid']));
 		if ($entry['mimetype'] === 'httpd/unix-directory') {
@@ -433,6 +438,7 @@ class Cache {
 		foreach ($subFolders as $folder) {
 			$this->removeChildren($folder);
 		}
+		\OC::$server->getLogger()->logException(new \Exception('### DEBUG Cache::removeChildren() path="' . $entry['path'] . '" fileid=' . $entry['fileid'] . ' parent=' . $entry['parent'] . ' storage=' . $this->getNumericStorageId()));
 		$sql = 'DELETE FROM `*PREFIX*filecache` WHERE `parent` = ?';
 		\OC_DB::executeAudited($sql, array($entry['fileid']));
 	}
