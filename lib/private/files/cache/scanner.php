@@ -115,7 +115,21 @@ class Scanner extends BasicEmitter {
 		if (is_null($data)) {
 			\OCP\Util::writeLog('OC\Files\Cache\Scanner', "!!! Path '$path' - '$this->storageId' is not accessible or present !!!", \OCP\Util::ERROR);
 			if ($this->storage->instanceOfStorage('\OCP\Files\IHomeStorage') && ($path === '' || $path === 'files')) {
-				\OCP\Util::writeLog('OC\Files\Cache\Scanner', 'Missing important folder "' . $path . '" in home storage!!! - ' . $this->storageId, \OCP\Util::ERROR);
+				$fullPath = $this->storage->getSourcePath($path);
+				$parentPath = dirname($fullPath);
+
+				\OCP\Util::writeLog('OC\Files\Cache\Scanner', 'path: ' . $fullPath . ' parent: ' . $parentPath, \OCP\Util::ERROR);
+				\OCP\Util::writeLog('OC\Files\Cache\Scanner', 'ls -la (dir): ' . shell_exec('ls -la ' . escapeshellarg($fullPath)), \OCP\Util::ERROR);
+				\OCP\Util::writeLog('OC\Files\Cache\Scanner', 'ls -la (parent): ' . shell_exec('ls -la ' . escapeshellarg($parentPath)), \OCP\Util::ERROR);
+				\OCP\Util::writeLog('OC\Files\Cache\Scanner', 'stat (dir): ' . shell_exec('stat ' . escapeshellarg($fullPath)), \OCP\Util::ERROR);
+				\OCP\Util::writeLog('OC\Files\Cache\Scanner', 'stat (parent): ' . shell_exec('stat ' . escapeshellarg($parentPath)), \OCP\Util::ERROR);
+
+				$data = $this->storage->getMetaData($path);
+				\OCP\Util::writeLog('OC\Files\Cache\Scanner', 'getMetaData (before): ' . print_r($data, true), \OCP\Util::ERROR);
+				clearstatcache();
+				$data = $this->storage->getMetaData($path);
+				\OCP\Util::writeLog('OC\Files\Cache\Scanner', 'getMetaData (after): ' . print_r($data, true), \OCP\Util::ERROR);
+
 				throw new \OCP\Files\StorageNotAvailableException('Missing important folder "' . $path . '" in home storage - ' . $this->storageId);
 			}
 			\OC::$server->getLogger()->logException(new \Exception("Path '$path' - '$this->storageId' is not accessible or present"), ['app' => 'OC\Files\Cache\Scanner']);
