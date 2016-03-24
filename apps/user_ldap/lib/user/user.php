@@ -249,6 +249,17 @@ class User {
 			if ($homedir && isset($homedir[0])) {
 				$path = $homedir[0];
 			}
+
+			$chars = count_chars($path, 1);
+			if($chars[ord('/')] !== 2 && $chars[ord('/')] !== 3) {
+				\OC::$server->getLogger()->logException(new \Exception('Home path for user ' . $this->getUsername() . ' read from LDAP returned ' . $path), ['app' => 'homeFolderDebug']);
+			}
+		}
+		if(!is_null($valueFromLDAP)) {
+			$chars = count_chars($path, 1);
+			if($chars[ord('/')] !== 2 && $chars[ord('/')] !== 3) {
+				\OC::$server->getLogger()->logException(new \Exception('Home path for user ' . $this->getUsername() . ' read from LDAP returned ' . $path), ['app' => 'homeFolderDebug']);
+			}
 		}
 
 		if(!empty($path)) {
@@ -266,6 +277,10 @@ class User {
 			$this->config->setUserValue(
 				$this->getUsername(), 'user_ldap', 'homePath', $path
 			);
+			$chars = count_chars($path, 1);
+			if($chars[ord('/')] !== 7 && $chars[ord('/')] !== 8) {
+				\OC::$server->getLogger()->logException(new \Exception('Effective home path for user ' . $this->getUsername() . ' is ' . $path), ['app' => 'homeFolderDebug']);
+			}
 			return $path;
 		}
 
@@ -275,6 +290,8 @@ class User {
 			// a naming rule attribute is defined, but it doesn't exist for that LDAP user
 			throw new \Exception('Home dir attribute can\'t be read from LDAP for uid: ' . $this->getUsername());
 		}
+
+		\OC::$server->getLogger()->logException(new \Exception('Use ownCloud default home path for ' . $this->getUsername()), ['app' => 'homeFolderDebug']);
 
 		//false will apply default behaviour as defined and done by OC_User
 		$this->config->setUserValue($this->getUsername(), 'user_ldap', 'homePath', '');

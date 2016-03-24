@@ -55,7 +55,11 @@ class Home extends Local implements \OCP\Files\IHomeStorage {
 		else {
 		    $this->id = 'home::' . $this->user->getUID();
 		}
-
+		$chars = count_chars($datadir, 1);
+		if($chars[ord('/')] !== 7 && $chars[ord('/')] !== 8) {
+			\OC::$server->getLogger()->error('Home storage for user {user} has datadir {datadir}', ['app' => 'homeFolderDebug', 'datadir' => $datadir, 'user' => $this->user->getUID()]);
+			\OC::$server->getLogger()->logException(new \Exception(), ['app' => 'homeFolderDebug']);
+		}
 		parent::__construct(array('datadir' => $datadir));
 	}
 
