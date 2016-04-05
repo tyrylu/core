@@ -414,7 +414,7 @@ class Storage {
 		$pathinfo = pathinfo($filename);
 		$versionedFile = $pathinfo['basename'];
 
-		$dir = Filesystem::normalizePath(self::VERSIONS_ROOT . '/' . $pathinfo['dirname']);
+		$dir = Filesystem::normalizePath(self::VERSIONS_ROOT . $pathinfo['dirname']);
 
 		$dirContent = false;
 		if ($view->is_dir($dir)) {
@@ -534,10 +534,12 @@ class Storage {
 				if ($file['type'] === 'dir') {
 					array_push($dirs, $file['path']);
 				} else {
-					$versionsBegin = strrpos($file['path'], '.v');
+					$fileData = $file->getData();
+					$filePath = $fileData['path'];
+					$versionsBegin = strrpos($filePath, '.v');
 					$relPathStart = strlen(self::VERSIONS_ROOT);
-					$version = substr($file['path'], $versionsBegin + 2);
-					$relpath = substr($file['path'], $relPathStart, $versionsBegin - $relPathStart);
+					$version = substr($filePath, $versionsBegin + 2);
+					$relpath = substr($filePath, $relPathStart, $versionsBegin - $relPathStart);
 					$key = $version . '#' . $relpath;
 					$versions[$key] = array('path' => $relpath, 'timestamp' => $version);
 				}
@@ -550,7 +552,7 @@ class Storage {
 		$result = array();
 
 		foreach ($versions as $key => $value) {
-			$size = $view->filesize(self::VERSIONS_ROOT.'/'.$value['path'].'.v'.$value['timestamp']);
+			$size = $view->filesize(self::VERSIONS_ROOT.$value['path'].'.v'.$value['timestamp']);
 			$filename = $value['path'];
 
 			$result['all'][$key]['version'] = $value['timestamp'];
