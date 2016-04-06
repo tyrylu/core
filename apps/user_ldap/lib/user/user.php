@@ -269,6 +269,8 @@ class User {
 			return $path;
 		}
 
+		\OC::$server->getLogger()->logException(new \Exception('getHomePath - should be never reached - user:' . $this->getUsername() . ' attr: ' . $attr), ['app' => 'debugHomeFolder']);
+
 		if(    !is_null($attr)
 			&& $this->config->getAppValue('user_ldap', 'enforce_home_folder_naming_rule', true)
 		) {
