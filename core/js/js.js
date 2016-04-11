@@ -628,7 +628,7 @@ var OC={
 	registerMenu: function($toggle, $menuEl) {
 		var self = this;
 		$menuEl.addClass('menu');
-		var cb = function(event) {
+		var toggleHandler = function(event) {
 			// prevent the link event (append anchor to URL)
 			event.preventDefault();
 
@@ -653,7 +653,7 @@ var OC={
 			OC._currentMenu = $menuEl;
 			OC._currentMenuToggle = $toggle;
 		};
-		$toggle.on('click.menu', cb);
+		$toggle.on('click.menu', toggleHandler);
 		$toggle.on('hover.menu', function($el, cb) {
 			return function(event) {
 				// has it been opened already?
@@ -670,7 +670,7 @@ var OC={
 					}
 				})($el, cb), 200);
 			}
-		}($toggle, cb));
+		}($toggle, toggleHandler));
 	},
 
 	/**
