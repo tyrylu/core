@@ -8,6 +8,8 @@
  *
  */
 
+/* global OC */
+
 (function() {
 
 	var TEMPLATE_FILE_ACTION_TRIGGER =
@@ -397,49 +399,61 @@
 			if (!$actionEl || !$actionEl.length) {
 				return;
 			}
-			$actionEl.on(
-				'click', {
-					a: null
-				},
-				function(event) {
-					event.stopPropagation();
-					event.preventDefault();
 
-					if ($actionEl.hasClass('open')) {
-						return;
-					}
+			var toggleHandler = function(event) {
+				event.stopPropagation();
+				event.preventDefault();
 
-					var $file = $(event.target).closest('tr');
-					if ($file.hasClass('busy')) {
-						return;
-					}
-					var currentFile = $file.find('td.filename');
-					var fileName = $file.attr('data-file');
-
-					context.fileActions.currentFile = currentFile;
-					// also set on global object for legacy apps
-					window.FileActions.currentFile = currentFile;
-
-					var callContext = _.extend({}, context);
-
-					if (!context.dir && context.fileList) {
-						callContext.dir = $file.attr('data-path') || context.fileList.getCurrentDirectory();
-					}
-
-					if (!context.fileInfoModel && context.fileList) {
-						callContext.fileInfoModel = context.fileList.getModelForFile(fileName);
-						if (!callContext.fileInfoModel) {
-							console.warn('No file info model found for file "' + fileName + '"');
-						}
-					}
-
-					actionSpec.action(
-						fileName,
-						callContext
-					);
+				if ($actionEl.hasClass('open')) {
+					return;
 				}
-			);
-			$actionEl.tooltip({placement:'top'});
+
+				var $file = $(event.target).closest('tr');
+				if ($file.hasClass('busy')) {
+					return;
+				}
+				var currentFile = $file.find('td.filename');
+				var fileName = $file.attr('data-file');
+
+				context.fileActions.currentFile = currentFile;
+				// also set on global object for legacy apps
+				window.FileActions.currentFile = currentFile;
+
+				var callContext = _.extend({}, context);
+
+				if (!context.dir && context.fileList) {
+					callContext.dir = $file.attr('data-path') || context.fileList.getCurrentDirectory();
+				}
+
+				if (!context.fileInfoModel && context.fileList) {
+					callContext.fileInfoModel = context.fileList.getModelForFile(fileName);
+					if (!callContext.fileInfoModel) {
+						console.warn('No file info model found for file "' + fileName + '"');
+					}
+				}
+
+				actionSpec.action(
+					fileName,
+					callContext
+					);
+			};
+
+			var eventExcludes = {
+				a: null
+			};
+
+			$actionEl.on('click', eventExcludes, toggleHandler);
+			if (actionSpec.name === 'menu') {
+				// menus should be opened on hover too
+				$actionEl.on('hover', eventExcludes, function(event) {
+					setTimeout(function() {
+						if ($actionEl.is(':hover')) {
+							toggleHandler(event);
+						}
+					}, OC.menuHoverTimeout);
+				});
+			}
+			$actionEl.tooltip({placement: 'top'});
 			return $actionEl;
 		},
 

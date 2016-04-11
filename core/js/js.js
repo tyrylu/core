@@ -95,6 +95,7 @@ var OC={
 	coreApps:['', 'admin','log','core/search','settings','core','3rdparty'],
 	requestToken: oc_requesttoken,
 	menuSpeed: 50,
+	menuHoverTimeout: 250,
 
 	/**
 	 * Get an absolute url to a file in an app
@@ -668,7 +669,7 @@ var OC={
 							OC._currentMenuToggleHover = true;
 						}
 					}
-				})($el, cb), 200);
+				})($el, cb), OC.menuHoverTimeout);
 			}
 		}($toggle, toggleHandler));
 	},
