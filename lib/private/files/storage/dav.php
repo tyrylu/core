@@ -264,11 +264,26 @@ class DAV extends Common {
 						'{DAV:}getcontentlength',
 						'{DAV:}getcontenttype',
 						'{http://owncloud.org/ns}permissions',
+						'{http://open-collaboration-services.org/ns}share-permissions',
 						'{DAV:}resourcetype',
 						'{DAV:}getetag',
 					)
 				);
 				$this->statCache->set($path, $response);
+				$cache = $this->getCache();
+				$cacheEntry = $cache->get($path);
+				$permissions = null;
+				if ($cacheEntry) {
+					$permissions = $cacheEntry->getPermissions();
+				}
+				// use default permission if remote server doesn't provide the share permissions
+				if (!isset($response['{http://open-collaboration-services.org/ns}share-permissions'])) {
+					$response['{http://open-collaboration-services.org/ns}share-permissions'] = \OCP\Constants::PERMISSION_ALL;
+				}
+				$sharePermissions = (int)$response['{http://open-collaboration-services.org/ns}share-permissions'];
+				if ($permissions !== null && $permissions !== $sharePermissions) {
+					$cache->put($path, ['permissions' => $sharePermissions]);
+				}
 			} catch (NotFound $e) {
 				// remember that this path did not exist
 				$this->statCache->clear($path . '/');
