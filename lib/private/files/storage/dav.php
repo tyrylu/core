@@ -246,7 +246,7 @@ class DAV extends Common {
 	 *
 	 * @throws NotFound
 	 */
-	private function propfind($path) {
+	protected function propfind($path) {
 		$path = $this->cleanPath($path);
 		$cachedResponse = $this->statCache->get($path);
 		if ($cachedResponse === false) {

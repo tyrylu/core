@@ -320,4 +320,11 @@ class Storage extends DAV implements ISharedStorage {
 		return ($this->getPermissions($path) & \OCP\Constants::PERMISSION_SHARE);
 	}
 
+	public function getPermissions($path) {
+		$properties = $this->propfind($path);
+		$sharePermissions = (int)$properties['{http://open-collaboration-services.org/ns}share-permissions'];
+		return $sharePermissions;
+	}
+
+
 }
