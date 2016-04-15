@@ -249,6 +249,10 @@ class User implements IUser {
 					'implementsAction' => $this->backend->implementsActions(\OC_User_Backend::GET_HOME),
 					'homeVar' => $this->backend->implementsActions(\OC_User_Backend::GET_HOME) ? $this->backend->getHome($this->uid) : 'doesNotImplementAction',
 					'backend' => get_class($this->backend),
+					'andOld' => $this->backend->implementsActions(\OC_User_Backend::GET_HOME) and $home = $this->backend->getHome($this->uid),
+					'andNew' => $this->backend->implementsActions(\OC_User_Backend::GET_HOME) and ($home = $this->backend->getHome($this->uid)),
+					'ampersandOld' => $this->backend->implementsActions(\OC_User_Backend::GET_HOME) && $home = $this->backend->getHome($this->uid),
+					'ampersandNew' => $this->backend->implementsActions(\OC_User_Backend::GET_HOME) && ($home = $this->backend->getHome($this->uid)),
 				];
 				\OC::$server->getLogger()->logException(new \Exception(json_encode($log)), ['app' => 'homeFolderDebug6']);
 			}
