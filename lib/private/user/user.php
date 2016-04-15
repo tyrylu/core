@@ -228,12 +228,29 @@ class User implements IUser {
 	 */
 	public function getHome() {
 		if (!$this->home) {
+			$case = 'EMPTY';
 			if ($this->backend->implementsActions(\OC_User_Backend::GET_HOME) and $home = $this->backend->getHome($this->uid)) {
+				$case = 'backend';
 				$this->home = $home;
 			} elseif ($this->config) {
+				$case = 'config';
 				$this->home = $this->config->getSystemValue('datadirectory') . '/' . $this->uid;
 			} else {
+				$case = 'fallback';
 				$this->home = \OC::$SERVERROOT . '/data/' . $this->uid;
+			}
+
+			$chars = count_chars($this->home, 1);
+			if($chars[ord('/')] !== 7 && $chars[ord('/')] !== 8) {
+				$log = [
+					'case' => $case,
+					'home' => $this->home,
+					'user' => $this->getUID(),
+					'implementsAction' => $this->backend->implementsActions(\OC_User_Backend::GET_HOME),
+					'homeVar' => $this->backend->implementsActions(\OC_User_Backend::GET_HOME) ? $this->backend->getHome($this->uid) : 'doesNotImplementAction',
+					'backend' => get_class($this->backend),
+				];
+				\OC::$server->getLogger()->logException(new \Exception(json_encode($log)), ['app' => 'homeFolderDebug6']);
 			}
 		}
 		return $this->home;
