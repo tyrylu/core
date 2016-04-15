@@ -199,9 +199,15 @@ class Connection extends LDAPUtility {
 			$this->readConfiguration();
 		}
 		if(is_null($this->cache) || !$this->configuration->ldapCacheTTL) {
+			if(substr($key, 0, 7) === 'getHome') {
+				\OC::$server->getLogger()->error('getFromCache ' . $key . ' is_null: ' . (is_null($this->cache)?'true':'false'), ['app' => 'homeFolderDebug8']);
+			}
 			return null;
 		}
 		if(!$this->isCached($key)) {
+			if(substr($key, 0, 7) === 'getHome') {
+				\OC::$server->getLogger()->error('getFromCache ' . $key . ' not isCached', ['app' => 'homeFolderDebug8']);
+			}
 			return null;
 
 		}
