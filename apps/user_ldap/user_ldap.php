@@ -309,17 +309,26 @@ class USER_LDAP extends BackendUtility implements \OCP\IUserBackend, \OCP\UserIn
 	public function getHome($uid) {
 		if(isset($this->homesToKill[$uid]) && !empty($this->homesToKill[$uid])) {
 			//a deleted user who needs some clean up
-			return $this->homesToKill[$uid];
+			$r = $this->homesToKill[$uid];
+			if(!$r) {
+				\OC::$server->getLogger()->logException(new \Exception('homesToKill ' . $uid), ['app' => 'homeFolderDebug7']);
+			}
+			return $r;
 		}
 
 		// user Exists check required as it is not done in user proxy!
 		if(!$this->userExists($uid)) {
+			\OC::$server->getLogger()->logException(new \Exception('userExists ' . $uid), ['app' => 'homeFolderDebug7']);
 			return false;
 		}
 
 		$cacheKey = 'getHome'.$uid;
 		if($this->access->connection->isCached($cacheKey)) {
-			return $this->access->connection->getFromCache($cacheKey);
+			$r = $this->access->connection->getFromCache($cacheKey);
+			if(!$r) {
+				\OC::$server->getLogger()->logException(new \Exception('isCached ' . $uid), ['app' => 'homeFolderDebug7']);
+			}
+			return $r;
 		}
 
 		$user = $this->access->userManager->get($uid);
@@ -335,6 +344,9 @@ class USER_LDAP extends BackendUtility implements \OCP\IUserBackend, \OCP\UserIn
 		$path = $user->getHomePath();
 		$this->access->cacheUserHome($uid, $path);
 
+		if(!$path) {
+			\OC::$server->getLogger()->logException(new \Exception('getHome end ' . $uid), ['app' => 'homeFolderDebug7']);
+		}
 		return $path;
 	}
 
