@@ -318,8 +318,9 @@ class USER_LDAP extends BackendUtility implements \OCP\IUserBackend, \OCP\UserIn
 		}
 
 		$cacheKey = 'getHome'.$uid;
-		if($this->access->connection->isCached($cacheKey)) {
-			return $this->access->connection->getFromCache($cacheKey);
+		$path = $this->access->connection->getFromCache($cacheKey);
+		if(!is_null($path)) {
+			return $path;
 		}
 
 		$user = $this->access->userManager->get($uid);

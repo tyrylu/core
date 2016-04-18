@@ -201,10 +201,6 @@ class Connection extends LDAPUtility {
 		if(is_null($this->cache) || !$this->configuration->ldapCacheTTL) {
 			return null;
 		}
-		if(!$this->isCached($key)) {
-			return null;
-
-		}
 		$key = $this->getCacheKey($key);
 
 		return json_decode(base64_decode($this->cache->get($key)), true);
