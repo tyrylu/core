@@ -364,3 +364,19 @@ Feature: provisioning
 		And As an "admin"
 		And user "user1" is enabled
 
+	Scenario: Subadmins should not be able to disable users that have admin permissions in their group
+		Given As an "admin"
+		And user "another-admin" exists
+		And user "subadmin" exists
+		And group "new-group" exists
+		And user "another-admin" belongs to group "admin"
+		And user "subadmin" belongs to group "new-group"
+		And user "another-admin" belongs to group "new-group"
+		And Assure user "subadmin" is subadmin of group "new-group"
+		And As an "subadmin"
+		When sending "PUT" to "/cloud/users/another-admin/disable"
+		Then the OCS status code should be "997"
+		Then the HTTP status code should be "401"
+		And As an "admin"
+		And user "another-admin" is enabled
+
