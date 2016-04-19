@@ -493,3 +493,18 @@ Feature: provisioning
 		And As an "admin"
 		And user "subadmin" is disabled
 
+	Scenario: Making a web request with an enabled user
+	    Given As an "admin"
+		And user "user0" exists
+		And As an "user0"
+		When sending "GET" to "/index.php/apps/files"
+		Then the HTTP status code should be "200"
+
+	Scenario: Making a web request with a disabled user
+	    Given As an "admin"
+		And user "user0" exists
+		And assure user "user0" is disabled
+		And As an "user0"
+		When sending "GET" to "/index.php/apps/files"
+		Then the HTTP status code should be "503"
+
