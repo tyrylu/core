@@ -466,16 +466,27 @@ class OC {
 		@ini_set('gd.jpeg_ignore_warning', 1);
 	}
 
-	private static function sendSameSiteCookie() {
+	/**
+	 * Send the same site cookies
+	 */
+	private static function sendSameSiteCookies() {
 		$cookieParams = session_get_cookie_params();
 		$secureCookie = ($cookieParams['secure'] === true) ? 'secure; ' : '';
-		header(
-			sprintf(
-				'Set-Cookie: oc_sameSiteCookie=true; path=%s; httponly;' . $secureCookie . 'expires=Fri, 31-Dec-2100 23:59:59 GMT; SameSite=lax',
-				$cookieParams['path']
-			),
-			false
-		);
+		$policies = [
+			'lax',
+			'strict',
+		];
+		foreach($policies as $policy) {
+			header(
+				sprintf(
+					'Set-Cookie: oc_sameSiteCookie%s=true; path=%s; httponly;' . $secureCookie . 'expires=Fri, 31-Dec-2100 23:59:59 GMT; SameSite=%s',
+					$policy,
+					$cookieParams['path'],
+					$policy
+				),
+				false
+			);
+		}
 	}
 
 	/**
@@ -488,23 +499,32 @@ class OC {
 	 * also we can't directly interfere with PHP's session mechanism.
 	 */
 	private static function performSameSiteCookieProtection() {
-		if(count($_COOKIE) > 0 && !isset($_COOKIE['oc_sameSiteCookie'])) {
-			self::sendSameSiteCookie();
-
-			// DAV client gets a 503 so they simply try again later and send the
-			// proper cookies
+		if(count($_COOKIE) > 0) {
 			$requestUri = \OC::$server->getRequest()->getScriptName();
 			$processingScript = explode('/', $requestUri);
 			$processingScript = $processingScript[count($processingScript)-1];
-			if($processingScript === 'remote.php') {
-				http_response_code(\OCP\AppFramework\Http::STATUS_SERVICE_UNAVAILABLE);
+
+			// For the "index.php" endpoint only a lax cookie is required.
+			if($processingScript === 'index.php') {
+				if(!isset($_COOKIE['oc_sameSiteCookielax'])) {
+					self::sendSameSiteCookies();
+					header('Location: '.$_SERVER['REQUEST_URI']);
+					exit();
+				}
 			} else {
-				// Everybody else gets a simple reload of the current page
-				header('Location: '.$_SERVER['REQUEST_URI']);
+				// All other endpoints require the lax and the strict cookie
+				if(!isset($_COOKIE['oc_sameSiteCookielax']) || !isset($_COOKIE['oc_sameSiteCookiestrict'])) {
+					self::sendSameSiteCookies();
+					// Debug mode gets access to the resources without strict cookie
+					// due to the fact that the SabreDAV browser also lives there.
+					if(!\OC::$server->getConfig()->getSystemValue('debug', false)) {
+						http_response_code(\OCP\AppFramework\Http::STATUS_SERVICE_UNAVAILABLE);
+						exit();
+					}
+				}
 			}
-			exit();
-		} elseif(!isset($_COOKIE['oc_sameSiteCookie'])) {
-			self::sendSameSiteCookie();
+		} elseif(!isset($_COOKIE['oc_sameSiteCookielax']) || !isset($_COOKIE['oc_sameSiteCookiestrict'])) {
+			self::sendSameSiteCookies();
 		}
 	}
 
