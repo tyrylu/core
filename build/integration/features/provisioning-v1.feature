@@ -424,3 +424,47 @@ Feature: provisioning
 		Then the HTTP status code should be "200"
 		And user "subadmin" is disabled
 
+	Scenario: Admin user cannot disable himself
+		Given As an "admin"
+		And user "another-admin" exists
+		And user "another-admin" belongs to group "admin"
+		And As an "another-admin"
+		When sending "PUT" to "/cloud/users/another-admin/disable"
+		Then the OCS status code should be "101"
+		And the HTTP status code should be "200"
+		And As an "admin"
+		And user "another-admin" is enabled
+
+	Scenario:Admin user cannot enable himself
+		Given As an "admin"
+		And user "another-admin" exists
+		And user "another-admin" belongs to group "admin"
+		And assure user "another-admin" is disabled
+		And As an "another-admin"
+		When sending "PUT" to "/cloud/users/another-admin/enable"
+		And As an "admin"
+		Then user "another-admin" is disabled
+
+	Scenario: disable an user with a regular user
+		Given As an "admin"
+		And user "user1" exists
+		And user "user2" exists
+		And As an "user1"
+		When sending "PUT" to "/cloud/users/user2/disable"
+		Then the OCS status code should be "997"
+		And the HTTP status code should be "401"
+		And As an "admin"
+		And user "user2" is enabled
+
+	Scenario: enable an user with a regular user
+		Given As an "admin"
+		And user "user1" exists
+		And user "user2" exists
+		And assure user "user2" is disabled
+		And As an "user1"
+		When sending "PUT" to "/cloud/users/user2/enable"
+		Then the OCS status code should be "997"
+		And the HTTP status code should be "401"
+		And As an "admin"
+		And user "user2" is disabled
+
