@@ -126,6 +126,9 @@ class Updater implements IUpdater {
 			$this->cache->correctFolderSize($path, $data);
 		}
 		$this->correctParentStorageMtime($path);
+		if ($data['mimetype'] !== 'httpd/unix-directory') {
+			$this->clearChecksum($path);
+		}
 		$this->propagator->propagateChange($path, $time, $sizeDifference);
 	}
 
@@ -220,6 +223,23 @@ class Updater implements IUpdater {
 		$parent = dirname($internalPath);
 		if ($parentId != -1) {
 			$this->cache->update($parentId, array('storage_mtime' => $this->storage->filemtime($parent)));
+		}
+	}
+
+	/**
+	 * Reset the checksum to NULL
+	 *
+	 * @param string $internalPath
+	 */
+	private function clearChecksum($internalPath) {
+		$fileId = $this->cache->getId($internalPath);
+		if ($fileId !== -1) {
+			$this->cache->update(
+				$fileId,
+				[
+					'checksum' => '',
+				]
+			);
 		}
 	}
 }
