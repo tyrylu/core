@@ -380,3 +380,47 @@ Feature: provisioning
 		And As an "admin"
 		And user "another-admin" is enabled
 
+	Scenario: Admin can disable another admin user
+		Given As an "admin"
+		And user "another-admin" exists
+		And user "another-admin" belongs to group "admin"
+		When sending "PUT" to "/cloud/users/another-admin/disable"
+		Then the OCS status code should be "100"
+		Then the HTTP status code should be "200"
+		And user "another-admin" is disabled
+
+	Scenario: Admin can enable another admin user
+		Given As an "admin"
+		And user "another-admin" exists
+		And user "another-admin" belongs to group "admin"
+		And assure user "another-admin" is disabled
+		When sending "PUT" to "/cloud/users/another-admin/enable"
+		Then the OCS status code should be "100"
+		Then the HTTP status code should be "200"
+		And user "another-admin" is enabled
+
+	Scenario: Admin can disable subadmins in the same group
+		Given As an "admin"
+		And user "subadmin" exists
+		And group "new-group" exists
+		And user "subadmin" belongs to group "new-group"
+		And user "admin" belongs to group "new-group"
+		And Assure user "subadmin" is subadmin of group "new-group"
+		When sending "PUT" to "/cloud/users/subadmin/disable"
+		Then the OCS status code should be "100"
+		Then the HTTP status code should be "200"
+		And user "subadmin" is disabled
+
+	Scenario: Admin can enable subadmins in the same group
+		Given As an "admin"
+		And user "subadmin" exists
+		And group "new-group" exists
+		And user "subadmin" belongs to group "new-group"
+		And user "admin" belongs to group "new-group"
+		And Assure user "subadmin" is subadmin of group "new-group"
+		And assure user "another-admin" is disabled
+		When sending "PUT" to "/cloud/users/subadmin/disable"
+		Then the OCS status code should be "100"
+		Then the HTTP status code should be "200"
+		And user "subadmin" is disabled
+
