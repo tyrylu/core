@@ -468,3 +468,28 @@ Feature: provisioning
 		And As an "admin"
 		And user "user2" is disabled
 
+	Scenario: Subadmin should not be able to disable himself
+		Given As an "admin"
+		And user "subadmin" exists
+		And group "new-group" exists
+		And user "subadmin" belongs to group "new-group"
+		And Assure user "subadmin" is subadmin of group "new-group"
+		And As an "subadmin"
+		When sending "PUT" to "/cloud/users/subadmin/disable"
+		Then the OCS status code should be "101"
+		Then the HTTP status code should be "200"
+		And As an "admin"
+		And user "subadmin" is enabled
+
+	Scenario: Subadmin should not be able to enable himself
+		Given As an "admin"
+		And user "subadmin" exists
+		And group "new-group" exists
+		And user "subadmin" belongs to group "new-group"
+		And Assure user "subadmin" is subadmin of group "new-group"
+		And assure user "subadmin" is disabled
+		And As an "subadmin"
+		When sending "PUT" to "/cloud/users/subadmin/enabled"
+		And As an "admin"
+		And user "subadmin" is disabled
+
