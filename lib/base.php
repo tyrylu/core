@@ -466,6 +466,48 @@ class OC {
 		@ini_set('gd.jpeg_ignore_warning', 1);
 	}
 
+	private static function sendSameSiteCookie() {
+		$cookieParams = session_get_cookie_params();
+		$secureCookie = ($cookieParams['secure'] === true) ? 'secure; ' : '';
+		header(
+			sprintf(
+				'Set-Cookie: oc_sameSiteCookie=true; path=%s; httponly;' . $secureCookie . 'expires=Fri, 31-Dec-2100 23:59:59 GMT; SameSite=lax',
+				$cookieParams['path']
+			),
+			false
+		);
+	}
+
+	/**
+	 * Same Site cookie to further mitigate CSRF attacks. This cookie has to
+	 * be set in every request if cookies are sent to add a second level of
+	 * defense against CSRF.
+	 *
+	 * If the cookie is not sent this will set the cookie and reload the page.
+	 * We use an additional cookie since we want to protect logout CSRF and
+	 * also we can't directly interfere with PHP's session mechanism.
+	 */
+	private static function performSameSiteCookieProtection() {
+		if(count($_COOKIE) > 0 && !isset($_COOKIE['oc_sameSiteCookie'])) {
+			self::sendSameSiteCookie();
+
+			// DAV client gets a 503 so they simply try again later and send the
+			// proper cookies
+			$requestUri = \OC::$server->getRequest()->getScriptName();
+			$processingScript = explode('/', $requestUri);
+			$processingScript = $processingScript[count($processingScript)-1];
+			if($processingScript === 'remote.php') {
+				http_response_code(\OCP\AppFramework\Http::STATUS_SERVICE_UNAVAILABLE);
+			} else {
+				// Everybody else gets a simple reload of the current page
+				header('Location: '.$_SERVER['REQUEST_URI']);
+			}
+			exit();
+		} elseif(!isset($_COOKIE['oc_sameSiteCookie'])) {
+			self::sendSameSiteCookie();
+		}
+	}
+
 	public static function init() {
 		// calculate the root directories
 		OC::$SERVERROOT = str_replace("\\", '/', substr(__DIR__, 0, -4));
@@ -575,6 +617,7 @@ class OC {
 		if(self::$server->getRequest()->getServerProtocol() === 'https') {
 			ini_set('session.cookie_secure', true);
 		}
+		self::performSameSiteCookieProtection();
 
 		if (!defined('OC_CONSOLE')) {
 			$errors = OC_Util::checkServer(\OC::$server->getConfig());
