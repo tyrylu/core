@@ -46,20 +46,23 @@ use OC\Repair\RepairMimeTypes;
 use OC\Repair\SearchLuceneTables;
 use OC\Repair\UpdateOutdatedOcsIds;
 use OC\Repair\RepairInvalidShares;
+use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\Component\EventDispatcher\GenericEvent;
 
 class Repair extends BasicEmitter {
-	/**
-	 * @var RepairStep[]
-	 **/
+	/* @var RepairStep[] */
 	private $repairSteps;
+	/** @var EventDispatcher */
+	private $dispatcher;
 
 	/**
 	 * Creates a new repair step runner
 	 *
-	 * @param array $repairSteps array of RepairStep instances
+	 * @param RepairStep[] $repairSteps array of RepairStep instances
 	 */
-	public function __construct($repairSteps = array()) {
+	public function __construct($repairSteps = [], EventDispatcher $dispatcher = null) {
 		$this->repairSteps = $repairSteps;
+		$this->dispatcher = $dispatcher;
 	}
 
 	/**
@@ -91,9 +94,21 @@ class Repair extends BasicEmitter {
 	/**
 	 * Add repair step
 	 *
-	 * @param RepairStep $repairStep repair step
+	 * @param RepairStep|string $repairStep repair step
 	 */
 	public function addStep($repairStep) {
+		if (is_string($repairStep)) {
+			if (class_exists($repairStep)) {
+				$s = new $repairStep();
+				if ($s instanceof \OC\RepairStep) {
+					$this->addStep($s);
+				} else {
+					throw new \Exception("Repair step '$repairStep' is not of type \\OC\\RepairStep");
+				}
+			} else {
+				throw new \Exception("Repair step '$repairStep' is unknown");
+			}
+		}
 		$this->repairSteps[] = $repairStep;
 	}
 
@@ -159,10 +174,12 @@ class Repair extends BasicEmitter {
 
 	/**
 	 * {@inheritDoc}
-	 *
-	 * Re-declared as public to allow invocation from within the closure above in php 5.3
 	 */
-	public function emit($scope, $method, array $arguments = array()) {
+	public function emit($scope, $method, array $arguments = []) {
 		parent::emit($scope, $method, $arguments);
+		if (!is_null($this->dispatcher)) {
+			$this->dispatcher->dispatch("$scope::$method",
+				new GenericEvent("$scope::$method", $arguments));
+		}
 	}
 }

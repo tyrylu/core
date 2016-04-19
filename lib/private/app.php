@@ -47,6 +47,7 @@
 use OC\App\DependencyAnalyzer;
 use OC\App\Platform;
 use OC\OCSClient;
+use OC\Repair;
 
 /**
  * This class manages the apps. It allows them to register and integrate in the
@@ -1023,7 +1024,6 @@ class OC_App {
 		if (!empty($requireMax)
 			&& version_compare(self::adjustVersionParts($ocVersion, $requireMax), $requireMax, '>')
 		) {
-
 			return false;
 		}
 
@@ -1042,7 +1042,6 @@ class OC_App {
 		}
 		return $versions;
 	}
-
 
 	/**
 	 * @param string $app
@@ -1140,9 +1139,12 @@ class OC_App {
 		if($appPath === false) {
 			return false;
 		}
+		$appData = self::getAppInfo($appId);
+		self::executeRepairSteps($appId, $appData['repair-steps']['pre-migration']);
 		if (file_exists($appPath . '/appinfo/database.xml')) {
 			OC_DB::updateDbFromStructure($appPath . '/appinfo/database.xml');
 		}
+		self::executeRepairSteps($appId, $appData['repair-steps']['post-migration']);
 		unset(self::$appVersion[$appId]);
 		// run upgrade code
 		if (file_exists($appPath . '/appinfo/update.php')) {
@@ -1151,7 +1153,6 @@ class OC_App {
 		}
 
 		//set remote/public handlers
-		$appData = self::getAppInfo($appId);
 		if (array_key_exists('ocsid', $appData)) {
 			\OC::$server->getConfig()->setAppValue($appId, 'ocsid', $appData['ocsid']);
 		} elseif(\OC::$server->getConfig()->getAppValue($appId, 'ocsid', null) !== null) {
@@ -1170,6 +1171,34 @@ class OC_App {
 		\OC::$server->getAppConfig()->setValue($appId, 'installed_version', $version);
 
 		return true;
+	}
+
+	/**
+	 * @param string $appId
+	 * @param array | string[] $steps
+	 * @throws \OC\NeedsUpdateException
+	 */
+	private static function executeRepairSteps($appId, array $steps) {
+		if (empty($steps)) {
+			return;
+		}
+		// load the app
+		self::loadApp($appId, false);
+
+		$dispatcher = OC::$server->getEventDispatcher();
+
+		// load the steps
+		$r = new Repair([], $dispatcher);
+		foreach ($steps as $step) {
+			try {
+				$r->addStep($step);
+			} catch (Exception $ex) {
+				$r->emit('\OC\Repair', 'error', [$ex->getMessage()]);
+				\OC::$server->getLogger()->logException($ex);
+			}
+		}
+		// run the steps
+		$r->run();
 	}
 
 	/**
