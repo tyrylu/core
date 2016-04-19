@@ -140,6 +140,13 @@ class SecurityMiddleware extends Middleware {
 			}
 		}
 
+		// Check for strict cookie requirement
+		if($this->reflector->hasAnnotation('StrictCookieRequired')) {
+			if(!$this->request->passesStrictCookieCheck()) {
+				throw new CrossSiteRequestForgeryException();
+			}
+		}
+
 		/**
 		 * FIXME: Use DI once available
 		 * Checks if app is enabled (also includes a check whether user is allowed to access the resource)

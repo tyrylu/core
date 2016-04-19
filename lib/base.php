@@ -500,20 +500,21 @@ class OC {
 	 */
 	private static function performSameSiteCookieProtection() {
 		if(count($_COOKIE) > 0) {
-			$requestUri = \OC::$server->getRequest()->getScriptName();
+			$request = \OC::$server->getRequest();
+			$requestUri = $request->getScriptName();
 			$processingScript = explode('/', $requestUri);
 			$processingScript = $processingScript[count($processingScript)-1];
 
 			// For the "index.php" endpoint only a lax cookie is required.
 			if($processingScript === 'index.php') {
-				if(!isset($_COOKIE['oc_sameSiteCookielax'])) {
+				if(!$request->passesLaxCookieCheck()) {
 					self::sendSameSiteCookies();
 					header('Location: '.$_SERVER['REQUEST_URI']);
 					exit();
 				}
 			} else {
 				// All other endpoints require the lax and the strict cookie
-				if(!isset($_COOKIE['oc_sameSiteCookielax']) || !isset($_COOKIE['oc_sameSiteCookiestrict'])) {
+				if(!$request->passesStrictCookieCheck()) {
 					self::sendSameSiteCookies();
 					// Debug mode gets access to the resources without strict cookie
 					// due to the fact that the SabreDAV browser also lives there.

@@ -278,7 +278,7 @@ class SecurityMiddlewareTest extends \Test\TestCase {
 	/**
 	 * @PublicPage
 	 */
-	public function testFailCsrfCheck(){
+	public function testPassesCsrfCheck(){
 		$this->request->expects($this->once())
 			->method('passesCSRFCheck')
 			->will($this->returnValue(true));
@@ -287,6 +287,64 @@ class SecurityMiddlewareTest extends \Test\TestCase {
 		$this->middleware->beforeController(__CLASS__, __FUNCTION__);
 	}
 
+	/**
+	 * @PublicPage
+	 * @expectedException \OC\AppFramework\Middleware\Security\Exceptions\CrossSiteRequestForgeryException
+	 */
+	public function testFailCsrfCheck(){
+		$this->request->expects($this->once())
+			->method('passesCSRFCheck')
+			->will($this->returnValue(false));
+
+		$this->reader->reflect(__CLASS__, __FUNCTION__);
+		$this->middleware->beforeController(__CLASS__, __FUNCTION__);
+	}
+
+	/**
+	 * @PublicPage
+	 * @StrictCookieRequired
+	 * @expectedException \OC\AppFramework\Middleware\Security\Exceptions\CrossSiteRequestForgeryException
+	 */
+	public function testStrictCookieRequiredCheck(){
+		$this->request->expects($this->once())
+			->method('passesCSRFCheck')
+			->will($this->returnValue(true));
+		$this->request->expects($this->once())
+			->method('passesStrictCookieCheck')
+			->will($this->returnValue(false));
+
+		$this->reader->reflect(__CLASS__, __FUNCTION__);
+		$this->middleware->beforeController(__CLASS__, __FUNCTION__);
+	}
+
+
+	/**
+	 * @PublicPage
+	 * @NoCSRFRequired
+	 */
+	public function testNoStrictCookieRequiredCheck(){
+		$this->request->expects($this->never())
+			->method('passesStrictCookieCheck')
+			->will($this->returnValue(false));
+
+		$this->reader->reflect(__CLASS__, __FUNCTION__);
+		$this->middleware->beforeController(__CLASS__, __FUNCTION__);
+	}
+
+	/**
+	 * @PublicPage
+	 * @NoCSRFRequired
+	 * @StrictCookieRequired
+	 */
+	public function testPassesStrictCookieRequiredCheck(){
+		$this->request
+			->expects($this->once())
+			->method('passesStrictCookieCheck')
+			->willReturn(true);
+
+		$this->reader->reflect(__CLASS__, __FUNCTION__);
+		$this->middleware->beforeController(__CLASS__, __FUNCTION__);
+	}
 
 	/**
 	 * @NoCSRFRequired
